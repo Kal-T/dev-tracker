@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { defineAsyncComponent } from 'vue'
 import BoardView from '../views/BoardView.vue'
 
 const router = createRouter({
@@ -21,7 +22,7 @@ const router = createRouter({
     {
       path: '/stats',
       name: 'stats',
-      component: () => import('../views/StatsView.vue'),
+      component: defineAsyncComponent(() => import('../views/StatsView.vue')),
     },
     {
       path: '/login',

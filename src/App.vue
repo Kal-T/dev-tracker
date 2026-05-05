@@ -22,11 +22,20 @@ const layout = computed(() => {
 <template>
   <component :is="layout">
     <RouterView v-slot="{ Component }">
-      <transition 
-        name="fade" 
-        mode="out-in"
-      >
-        <component :is="Component" />
+      <transition name="fade" mode="out-in">
+        <KeepAlive :include="['StatsView']">
+          <Suspense>
+            <!-- Main Content -->
+            <component :is="Component" />
+
+            <!-- Loading State -->
+            <template #fallback>
+              <div class="flex items-center justify-center py-20">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            </template>
+          </Suspense>
+        </KeepAlive>
       </transition>
     </RouterView>
   </component>
