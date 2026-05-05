@@ -2,9 +2,11 @@
 import { ref, computed } from 'vue'
 import { useTaskStore, type TaskStatus } from '@/stores/taskStore'
 import TaskCard from '@/components/TaskCard.vue'
+import AddTaskModal from '@/components/AddTaskModal.vue'
 
 const taskStore = useTaskStore()
 const searchQuery = ref('')
+const isModalOpen = ref(false)
 
 // Filtered tasks based on search query
 const filteredTasks = computed(() => {
@@ -42,15 +44,8 @@ const handleDelete = (id: string) => {
   }
 }
 
-// Helper to add a mock task if the board is empty
-const addSampleTask = () => {
-  taskStore.addTask({
-    title: 'New Feature Request',
-    description: 'Implement dark mode toggle in the settings panel.',
-    status: 'todo',
-    priority: 'medium',
-    tags: ['ui', 'ux'],
-  })
+const toggleModal = () => {
+  isModalOpen.value = !isModalOpen.value
 }
 </script>
 
@@ -72,7 +67,7 @@ const addSampleTask = () => {
           >
         </div>
         <button 
-          @click="addSampleTask"
+          @click="toggleModal"
           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:shadow-blue-200 transition-all flex items-center gap-2 whitespace-nowrap"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -83,6 +78,7 @@ const addSampleTask = () => {
       </div>
     </div>
 
+    <!-- Kanban Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
       <div 
         v-for="(col, key) in columns" 
@@ -115,6 +111,12 @@ const addSampleTask = () => {
         </div>
       </div>
     </div>
+
+    <!-- Modals -->
+    <AddTaskModal 
+      v-if="isModalOpen" 
+      @close="toggleModal" 
+    />
   </div>
 </template>
 
