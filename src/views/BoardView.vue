@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useTaskStore, TASK_STATUS, type TaskStatus } from '@/stores/taskStore'
 import TaskCard from '@/components/TaskCard.vue'
 import AddTaskModal from '@/components/AddTaskModal.vue'
+import GithubImport from '@/components/GithubImport.vue'
 
 const taskStore = useTaskStore()
 const searchQuery = ref('')
@@ -77,6 +78,9 @@ const toggleModal = () => {
         </button>
       </div>
     </div>
+
+    <!-- GitHub Import -->
+    <GithubImport />
 
     <!-- Kanban Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
