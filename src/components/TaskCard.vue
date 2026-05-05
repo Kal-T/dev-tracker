@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { TASK_STATUS, TASK_PRIORITY, type Task, type TaskStatus } from '@/stores/taskStore'
 
 const props = defineProps<{
@@ -42,7 +43,11 @@ const statusOptions: { label: string; value: TaskStatus }[] = [
       </button>
     </div>
 
-    <h3 class="font-semibold text-slate-800 mb-1 leading-tight">{{ task.title }}</h3>
+    <RouterLink :to="`/task/${task.id}`" class="block group/title">
+      <h3 class="font-semibold text-slate-800 mb-1 leading-tight group-hover/title:text-blue-600 transition-colors">
+        {{ task.title }}
+      </h3>
+    </RouterLink>
     <p class="text-sm text-slate-500 line-clamp-2 mb-4">{{ task.description }}</p>
 
     <div class="flex flex-wrap gap-1 mb-4">
