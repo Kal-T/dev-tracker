@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Task, TaskStatus } from '@/stores/taskStore'
+import { TASK_STATUS, TASK_PRIORITY, type Task, type TaskStatus } from '@/stores/taskStore'
 
 const props = defineProps<{
   task: Task
@@ -11,15 +11,15 @@ const emit = defineEmits<{
 }>()
 
 const priorityColors = {
-  low: 'bg-green-100 text-green-700 border-green-200',
-  medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  high: 'bg-red-100 text-red-700 border-red-200'
+  [TASK_PRIORITY.LOW]: 'bg-green-100 text-green-700 border-green-200',
+  [TASK_PRIORITY.MEDIUM]: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  [TASK_PRIORITY.HIGH]: 'bg-red-100 text-red-700 border-red-200'
 }
 
 const statusOptions: { label: string; value: TaskStatus }[] = [
-  { label: 'To Do', value: 'todo' },
-  { label: 'In Progress', value: 'in-progress' },
-  { label: 'Done', value: 'done' }
+  { label: 'To Do', value: TASK_STATUS.TODO },
+  { label: 'In Progress', value: TASK_STATUS.IN_PROGRESS },
+  { label: 'Done', value: TASK_STATUS.DONE }
 ]
 </script>
 

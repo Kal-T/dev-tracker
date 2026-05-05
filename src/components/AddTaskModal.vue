@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm, useField } from 'vee-validate'
 import * as yup from 'yup'
-import { useTaskStore } from '@/stores/taskStore'
+import { useTaskStore, TASK_STATUS, TASK_PRIORITY } from '@/stores/taskStore'
 import BaseModal from './BaseModal.vue'
 
 const emit = defineEmits<{
@@ -14,14 +14,14 @@ const taskStore = useTaskStore()
 const schema = yup.object({
   title: yup.string().required('Title is required').min(3, 'Title must be at least 3 characters'),
   description: yup.string().optional(),
-  priority: yup.string().oneOf(['low', 'medium', 'high']).required('Priority is required'),
+  priority: yup.string().oneOf(Object.values(TASK_PRIORITY)).required('Priority is required'),
   tags: yup.string().optional()
 })
 
 const { handleSubmit, errors, isSubmitting } = useForm({
   validationSchema: schema,
   initialValues: {
-    priority: 'medium',
+    priority: TASK_PRIORITY.MEDIUM,
     tags: ''
   }
 })
@@ -40,8 +40,8 @@ const onSubmit = handleSubmit((values) => {
   taskStore.addTask({
     title: values.title,
     description: values.description || '',
-    priority: values.priority as 'low' | 'medium' | 'high',
-    status: 'todo',
+    priority: values.priority as any, // Typed via schema
+    status: TASK_STATUS.TODO,
     tags: tagsArray
   })
 
@@ -86,9 +86,9 @@ const onSubmit = handleSubmit((values) => {
             v-model="priority"
             class="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white"
           >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+            <option :value="TASK_PRIORITY.LOW">Low</option>
+            <option :value="TASK_PRIORITY.MEDIUM">Medium</option>
+            <option :value="TASK_PRIORITY.HIGH">High</option>
           </select>
         </div>
 

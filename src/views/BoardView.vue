@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useTaskStore, type TaskStatus } from '@/stores/taskStore'
+import { useTaskStore, TASK_STATUS, type TaskStatus } from '@/stores/taskStore'
 import TaskCard from '@/components/TaskCard.vue'
 import AddTaskModal from '@/components/AddTaskModal.vue'
 
@@ -16,19 +16,19 @@ const filteredTasks = computed(() => {
 // Group filtered tasks by status
 const columns = computed(() => {
   return {
-    todo: {
+    [TASK_STATUS.TODO]: {
       title: 'To Do',
-      tasks: filteredTasks.value.filter((t) => t.status === 'todo'),
+      tasks: filteredTasks.value.filter((t) => t.status === TASK_STATUS.TODO),
       color: 'bg-slate-100',
     },
-    'in-progress': {
+    [TASK_STATUS.IN_PROGRESS]: {
       title: 'In Progress',
-      tasks: filteredTasks.value.filter((t) => t.status === 'in-progress'),
+      tasks: filteredTasks.value.filter((t) => t.status === TASK_STATUS.IN_PROGRESS),
       color: 'bg-blue-50/50',
     },
-    done: {
+    [TASK_STATUS.DONE]: {
       title: 'Done',
-      tasks: filteredTasks.value.filter((t) => t.status === 'done'),
+      tasks: filteredTasks.value.filter((t) => t.status === TASK_STATUS.DONE),
       color: 'bg-green-50/50',
     },
   }

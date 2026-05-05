@@ -1,8 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref, watch, computed } from 'vue'
 
-export type TaskStatus = 'todo' | 'in-progress' | 'done'
-export type TaskPriority = 'low' | 'medium' | 'high'
+export const TASK_STATUS = {
+  TODO: 'todo',
+  IN_PROGRESS: 'in-progress',
+  DONE: 'done'
+} as const
+
+export const TASK_PRIORITY = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high'
+} as const
+
+export type TaskStatus = typeof TASK_STATUS[keyof typeof TASK_STATUS]
+export type TaskPriority = typeof TASK_PRIORITY[keyof typeof TASK_PRIORITY]
 
 export interface Task {
   id: string
@@ -43,9 +55,9 @@ export const useTaskStore = defineStore('task', () => {
 
   const tasksByStatus = computed(() => {
     return {
-      todo: tasks.value.filter((t) => t.status === 'todo'),
-      'in-progress': tasks.value.filter((t) => t.status === 'in-progress'),
-      done: tasks.value.filter((t) => t.status === 'done'),
+      [TASK_STATUS.TODO]: tasks.value.filter((t) => t.status === TASK_STATUS.TODO),
+      [TASK_STATUS.IN_PROGRESS]: tasks.value.filter((t) => t.status === TASK_STATUS.IN_PROGRESS),
+      [TASK_STATUS.DONE]: tasks.value.filter((t) => t.status === TASK_STATUS.DONE),
     }
   })
 
