@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 
 const handleLogin = () => {
-  // Mock login
-  console.log('Logging in...', email.value)
-  router.push('/board')
+  if (email.value) {
+    authStore.login(email.value)
+    router.push('/board')
+  }
 }
 </script>
 
