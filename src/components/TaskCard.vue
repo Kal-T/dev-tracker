@@ -7,6 +7,7 @@ const props = defineProps<{
   task: Task
 }>()
 
+
 const emit = defineEmits<{
   (e: 'move', id: string, status: TaskStatus): void
   (e: 'delete', id: string): void

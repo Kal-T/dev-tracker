@@ -21,6 +21,8 @@ const schema = yup.object({
 const { handleSubmit, errors, isSubmitting } = useForm({
   validationSchema: schema,
   initialValues: {
+    title: '',
+    description: '',
     priority: TASK_PRIORITY.MEDIUM,
     tags: ''
   }
@@ -34,16 +36,16 @@ const { value: tagsInput } = useField<string>('tags')
 const onSubmit = handleSubmit((values) => {
   // Process tags from comma-separated string to array
   const tagsArray = values.tags
-    ? values.tags
+    ? String(values.tags)
         .split(',')
         .map((tag) => tag.trim())
         .filter((tag) => tag !== '')
     : []
 
   taskStore.addTask({
-    title: values.title,
-    description: values.description || '',
-    priority: values.priority as any, // Typed via schema
+    title: values.title as string,
+    description: (values.description as string) || '',
+    priority: values.priority as any,
     status: TASK_STATUS.TODO,
     tags: tagsArray
   })

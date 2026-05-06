@@ -156,10 +156,15 @@ const toggleModal = () => {
           group="tasks"
           item-key="id"
           class="space-y-4 min-h-[400px]"
-          @change="(e) => onDragChange(e, TASK_STATUS.TODO)"
+          @change="(e: any) => onDragChange(e, TASK_STATUS.TODO)"
         >
           <template #item="{ element }">
-            <TaskCard :task="element" @move="handleMove" @delete="handleDelete" />
+            <TaskCard 
+              v-memo="[element.status, element.priority, element.title]"
+              :task="element" 
+              @move="handleMove" 
+              @delete="handleDelete" 
+            />
           </template>
         </draggable>
       </div>
@@ -177,10 +182,15 @@ const toggleModal = () => {
           group="tasks"
           item-key="id"
           class="space-y-4 min-h-[400px]"
-          @change="(e) => onDragChange(e, TASK_STATUS.IN_PROGRESS)"
+          @change="(e: any) => onDragChange(e, TASK_STATUS.IN_PROGRESS)"
         >
           <template #item="{ element }">
-            <TaskCard :task="element" @move="handleMove" @delete="handleDelete" />
+            <TaskCard 
+              v-memo="[element.status, element.priority, element.title]"
+              :task="element" 
+              @move="handleMove" 
+              @delete="handleDelete" 
+            />
           </template>
         </draggable>
       </div>
@@ -197,10 +207,15 @@ const toggleModal = () => {
           group="tasks"
           item-key="id"
           class="space-y-4 min-h-[400px]"
-          @change="(e) => onDragChange(e, TASK_STATUS.DONE)"
+          @change="(e: any) => onDragChange(e, TASK_STATUS.DONE)"
         >
           <template #item="{ element }">
-            <TaskCard :task="element" @move="handleMove" @delete="handleDelete" />
+            <TaskCard 
+              v-memo="[element.status, element.priority, element.title]"
+              :task="element" 
+              @move="handleMove" 
+              @delete="handleDelete" 
+            />
           </template>
         </draggable>
       </div>
