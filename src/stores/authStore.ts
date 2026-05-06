@@ -6,7 +6,6 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value)
 
   function login(email: string) {
-    // Mock login
     user.value = {
       name: 'Thiha Htet Zaw',
       email: email

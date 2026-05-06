@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import { useTaskStore, TASK_PRIORITY, TASK_STATUS } from '@/stores/taskStore'
+import { useGithubIssues } from '@/composables/useGithubIssues'
 
 const taskStore = useTaskStore()
 const repoPath = ref('') // owner/repo
-const isLoading = ref(false)
-const errorMessage = ref('')
 const lastImportedRepo = ref('')
+
+// Vue Query hook
+const { 
+  isPending, 
+  isError, 
+  error, 
+  data: issues, 
+  refetch 
+} = useGithubIssues(repoPath)
 
 onMounted(() => {
   const saved = localStorage.getItem('devtracker-last-repo')
@@ -16,53 +23,23 @@ onMounted(() => {
   }
 })
 
-const importIssues = async () => {
-  if (!repoPath.value.includes('/')) {
-    errorMessage.value = 'Please use owner/repo format'
-    return
-  }
+const handleImport = () => {
+  if (!issues.value) return
 
-  isLoading.value = true
-  errorMessage.value = ''
+  issues.value.forEach((issue: any) => {
+    if (issue.pull_request) return
 
-  try {
-    const response = await axios.get(`https://api.github.com/repos/${repoPath.value}/issues`, {
-      params: {
-        state: 'open',
-        per_page: 10
-      }
+    taskStore.addTask({
+      title: issue.title,
+      description: issue.body || 'No description provided on GitHub.',
+      status: TASK_STATUS.TODO,
+      priority: TASK_PRIORITY.MEDIUM,
+      tags: ['github', ...issue.labels.map((l: any) => l.name)]
     })
+  })
 
-    const issues = response.data
-
-    if (issues.length === 0) {
-      errorMessage.value = 'No open issues found in this repository.'
-    } else {
-      issues.forEach((issue: any) => {
-        // Skip pull requests (GitHub API returns them as issues)
-        if (issue.pull_request) return
-
-        taskStore.addTask({
-          title: issue.title,
-          description: issue.body || 'No description provided on GitHub.',
-          status: TASK_STATUS.TODO,
-          priority: TASK_PRIORITY.MEDIUM,
-          tags: ['github', ...issue.labels.map((l: any) => l.name)]
-        })
-      })
-
-      lastImportedRepo.value = repoPath.value
-      localStorage.setItem('devtracker-last-repo', repoPath.value)
-      repoPath.value = ''
-    }
-  } catch (err: any) {
-    errorMessage.value =
-      err.response?.status === 404
-        ? 'Repository not found. Check the owner/repo path.'
-        : 'Failed to fetch issues. You might be rate limited or the repo is private.'
-  } finally {
-    isLoading.value = false
-  }
+  lastImportedRepo.value = repoPath.value
+  localStorage.setItem('devtracker-last-repo', repoPath.value)
 }
 </script>
 
@@ -82,41 +59,62 @@ const importIssues = async () => {
             type="text"
             placeholder="owner/repo"
             class="w-full pl-[104px] pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
-            @keyup.enter="importIssues"
           />
         </div>
       </div>
-      <button
-        :disabled="isLoading || !repoPath"
-        class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 transition-all flex items-center gap-2 whitespace-nowrap h-[46px]"
-        @click="importIssues"
-      >
-        <svg
-          v-if="isLoading"
-          class="animate-spin h-4 w-4 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
+      <div class="flex gap-2">
+        <button
+          @click="handleImport"
+          :disabled="isPending || !issues || issues.length === 0"
+          class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 transition-all flex items-center gap-2 whitespace-nowrap h-[46px]"
         >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
+          <svg
+            v-if="isPending"
+            class="animate-spin h-4 w-4 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          {{ isPending ? 'Fetching...' : 'Import Issues' }}
+        </button>
+
+        <button
+          @click="() => refetch()"
+          :disabled="isPending || !repoPath.includes('/')"
+          class="bg-blue-50 text-blue-600 px-4 py-2.5 rounded-xl font-bold hover:bg-blue-100 transition-all h-[46px]"
+          title="Force Refresh"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
             fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        {{ isLoading ? 'Fetching...' : 'Import Issues' }}
-      </button>
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <p v-if="errorMessage" class="mt-3 text-sm font-semibold text-red-500 flex items-center gap-1">
+    <p v-if="isError" class="mt-3 text-sm font-semibold text-red-500 flex items-center gap-1">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="h-4 w-4"
@@ -129,7 +127,7 @@ const importIssues = async () => {
           clip-rule="evenodd"
         />
       </svg>
-      {{ errorMessage }}
+      {{ (error as any)?.response?.status === 404 ? 'Repo not found' : 'Fetch failed' }}
     </p>
 
     <p v-if="lastImportedRepo" class="mt-3 text-xs text-slate-400 italic">
