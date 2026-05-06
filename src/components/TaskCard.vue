@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { type DirectiveBinding } from 'vue'
 import { TASK_STATUS, TASK_PRIORITY, type Task, type TaskStatus } from '@/stores/taskStore'
 
 const props = defineProps<{
@@ -26,6 +27,7 @@ const statusOptions: { label: string; value: TaskStatus }[] = [
 
 <template>
   <div
+    v-priority-color="task.priority"
     class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow group cursor-grab active:cursor-grabbing select-none"
   >
     <div class="flex justify-between items-start mb-3">
