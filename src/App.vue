@@ -9,7 +9,7 @@ const route = useRoute()
 // Map of layout components
 const layouts = {
   default: MainLayout,
-  auth: AuthLayout,
+  auth: AuthLayout
 }
 
 // Compute the active layout based on route meta, fallback to default

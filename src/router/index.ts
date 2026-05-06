@@ -7,30 +7,30 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/board',
+      redirect: '/board'
     },
     {
       path: '/board',
       name: 'board',
-      component: BoardView,
+      component: BoardView
     },
     {
       path: '/task/:id',
       name: 'task-detail',
-      component: () => import('../views/TaskDetailView.vue'),
+      component: () => import('../views/TaskDetailView.vue')
     },
     {
       path: '/stats',
       name: 'stats',
-      component: defineAsyncComponent(() => import('../views/StatsView.vue')),
+      component: defineAsyncComponent(() => import('../views/StatsView.vue'))
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { layout: 'auth' },
-    },
-  ],
+      meta: { layout: 'auth' }
+    }
+  ]
 })
 
 export default router

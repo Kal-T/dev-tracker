@@ -13,8 +13,8 @@ export const TASK_PRIORITY = {
   HIGH: 'high'
 } as const
 
-export type TaskStatus = typeof TASK_STATUS[keyof typeof TASK_STATUS]
-export type TaskPriority = typeof TASK_PRIORITY[keyof typeof TASK_PRIORITY]
+export type TaskStatus = (typeof TASK_STATUS)[keyof typeof TASK_STATUS]
+export type TaskPriority = (typeof TASK_PRIORITY)[keyof typeof TASK_PRIORITY]
 
 export interface Task {
   id: string
@@ -57,7 +57,7 @@ export const useTaskStore = defineStore('task', () => {
     return {
       [TASK_STATUS.TODO]: tasks.value.filter((t) => t.status === TASK_STATUS.TODO),
       [TASK_STATUS.IN_PROGRESS]: tasks.value.filter((t) => t.status === TASK_STATUS.IN_PROGRESS),
-      [TASK_STATUS.DONE]: tasks.value.filter((t) => t.status === TASK_STATUS.DONE),
+      [TASK_STATUS.DONE]: tasks.value.filter((t) => t.status === TASK_STATUS.DONE)
     }
   })
 
@@ -74,7 +74,7 @@ export const useTaskStore = defineStore('task', () => {
     const newTask: Task = {
       ...task,
       id: crypto.randomUUID(),
-      createdAt: Date.now(),
+      createdAt: Date.now()
     }
     tasks.value.push(newTask)
   }
@@ -102,6 +102,6 @@ export const useTaskStore = defineStore('task', () => {
     addTask,
     updateTask,
     deleteTask,
-    moveTask,
+    moveTask
   }
 })

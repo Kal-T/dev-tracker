@@ -8,7 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   function login(email: string) {
     // Mock login
     user.value = {
-      name: 'John Doe',
+      name: 'Thiha Htet Zaw',
       email: email
     }
   }
