@@ -1,58 +1,22 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import draggable from 'vuedraggable'
-import { useTaskStore, TASK_STATUS, type TaskStatus } from '@/stores/taskStore'
+import { TASK_STATUS } from '@/stores/taskStore'
+import { useKanbanBoard } from '@/composables/useKanbanBoard'
 import TaskCard from '@/components/TaskCard.vue'
 import AddTaskModal from '@/components/AddTaskModal.vue'
 import GithubImport from '@/components/GithubImport.vue'
 
-const taskStore = useTaskStore()
-const searchQuery = ref('')
-const isModalOpen = ref(false)
-const isLoading = ref(true) // Initial loading state
+const { taskStore, searchQuery, todoTasks, inProgressTasks, doneTasks, onDragChange, handleMove, handleDelete } = useKanbanBoard()
 
-// Simulate initial data fetch
+const isModalOpen = ref(false)
+const isLoading = ref(true)
+
 onMounted(() => {
   setTimeout(() => {
     isLoading.value = false
   }, 1000)
 })
-
-// Group filtered tasks by status for draggable
-const todoTasks = computed({
-  get: () =>
-    taskStore.filteredTasks(searchQuery.value).filter((t) => t.status === TASK_STATUS.TODO),
-  set: (val) => {}
-})
-
-const inProgressTasks = computed({
-  get: () =>
-    taskStore.filteredTasks(searchQuery.value).filter((t) => t.status === TASK_STATUS.IN_PROGRESS),
-  set: (val) => {}
-})
-
-const doneTasks = computed({
-  get: () =>
-    taskStore.filteredTasks(searchQuery.value).filter((t) => t.status === TASK_STATUS.DONE),
-  set: (val) => {}
-})
-
-const onDragChange = (event: any, newStatus: TaskStatus) => {
-  if (event.added) {
-    const task = event.added.element
-    taskStore.moveTask(task.id, newStatus)
-  }
-}
-
-const handleMove = (id: string, newStatus: TaskStatus) => {
-  taskStore.moveTask(id, newStatus)
-}
-
-const handleDelete = (id: string) => {
-  if (confirm('Are you sure you want to delete this task?')) {
-    taskStore.deleteTask(id)
-  }
-}
 
 const toggleModal = () => {
   isModalOpen.value = !isModalOpen.value

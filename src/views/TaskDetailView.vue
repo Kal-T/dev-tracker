@@ -14,72 +14,15 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import {
-  useTaskStore,
-  TASK_STATUS,
-  TASK_PRIORITY,
-  type TaskStatus,
-  type TaskPriority
-} from '@/stores/taskStore'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { TASK_STATUS, TASK_PRIORITY } from '@/stores/taskStore'
+import { useTaskDetail } from '@/composables/useTaskDetail'
 
 const route = useRoute()
-const router = useRouter()
-const taskStore = useTaskStore()
-
-const isEditing = ref(false)
 const taskId = computed(() => route.params.id as string)
 
-const task = computed(() => {
-  return taskStore.tasks.find((t) => t.id === taskId.value)
-})
-
-// Local state for editing
-const editedTask = ref({
-  title: '',
-  description: '',
-  status: TASK_STATUS.TODO as TaskStatus,
-  priority: TASK_PRIORITY.MEDIUM as TaskPriority
-})
-
-// Initialize local state when task is found or toggled to edit
-watchEffect(() => {
-  if (task.value) {
-    editedTask.value = {
-      title: task.value.title,
-      description: task.value.description,
-      status: task.value.status,
-      priority: task.value.priority
-    }
-  } else {
-    // Redirect if not found
-    router.replace('/board')
-  }
-})
-
-const toggleEdit = () => {
-  isEditing.value = !isEditing.value
-}
-
-const saveChanges = () => {
-  if (task.value) {
-    taskStore.updateTask(task.value.id, editedTask.value)
-    isEditing.value = false
-  }
-}
-
-const cancelEdit = () => {
-  if (task.value) {
-    editedTask.value = {
-      title: task.value.title,
-      description: task.value.description,
-      status: task.value.status,
-      priority: task.value.priority
-    }
-    isEditing.value = false
-  }
-}
+const { task, isEditing, editedTask, toggleEdit, saveChanges, cancelEdit } = useTaskDetail(taskId)
 
 const priorityColors = {
   [TASK_PRIORITY.LOW]: 'bg-green-100 text-green-700',

@@ -1,46 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useTaskStore, TASK_PRIORITY, TASK_STATUS } from '@/stores/taskStore'
-import { useGithubIssues } from '@/composables/useGithubIssues'
+import { useGithubImport } from '@/composables/useGithubImport'
 
-const taskStore = useTaskStore()
-const repoPath = ref('') // owner/repo
-const lastImportedRepo = ref('')
-
-// Vue Query hook
-const { 
-  isFetching, 
-  isError, 
-  error, 
-  data: issues, 
-  refetch 
-} = useGithubIssues(repoPath)
-
-onMounted(() => {
-  const saved = localStorage.getItem('devtracker-last-repo')
-  if (saved) {
-    lastImportedRepo.value = saved
-  }
-})
-
-const handleImport = () => {
-  if (!issues.value) return
-
-  issues.value.forEach((issue: any) => {
-    if (issue.pull_request) return
-
-    taskStore.addTask({
-      title: issue.title,
-      description: issue.body || 'No description provided on GitHub.',
-      status: TASK_STATUS.TODO,
-      priority: TASK_PRIORITY.MEDIUM,
-      tags: ['github', ...issue.labels.map((l: any) => l.name)]
-    })
-  })
-
-  lastImportedRepo.value = repoPath.value
-  localStorage.setItem('devtracker-last-repo', repoPath.value)
-}
+const { repoPath, lastImportedRepo, isFetching, isError, error, issues, refetch, handleImport } =
+  useGithubImport()
 </script>
 
 <template>

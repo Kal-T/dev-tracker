@@ -15,7 +15,7 @@ export function useGithubIssues(repo: Ref<string>) {
     queryKey: ['github-issues', repo],
     queryFn: async () => {
       if (!repo.value || !repo.value.includes('/')) return []
-      
+
       console.log(`[Vue Query] Fetching issues for: ${repo.value}...`)
       const response = await axios.get<GithubIssue[]>(
         `https://api.github.com/repos/${repo.value}/issues`,
