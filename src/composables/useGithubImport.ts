@@ -7,7 +7,6 @@ const STORAGE_KEY = 'devtracker-last-repo'
 export function useGithubImport() {
   const taskStore = useTaskStore()
 
-  // Restore last used repo from localStorage on first call
   const repoPath = ref(localStorage.getItem(STORAGE_KEY) ?? '')
   const lastImportedRepo = ref(localStorage.getItem(STORAGE_KEY) ?? '')
 

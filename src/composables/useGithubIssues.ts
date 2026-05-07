@@ -25,9 +25,6 @@ export function useGithubIssues(repo: Ref<string>) {
       )
       return response.data
     },
-    // Only enable query if repo looks valid
-    enabled: () => repo.value.includes('/'),
-    staleTime: 1000 * 60 * 5, // Data is fresh for 5 minutes
-    gcTime: 1000 * 60 * 10 // Data stays in cache for 10 minutes even if unused
+    enabled: () => repo.value.includes('/')
   })
 }
