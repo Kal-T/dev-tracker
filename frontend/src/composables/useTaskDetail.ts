@@ -24,7 +24,6 @@ export function useTaskDetail(taskId: Ref<string>) {
     priority: TASK_PRIORITY.MEDIUM as TaskPriority
   })
 
-  // Keep local edit state in sync with the store, and redirect if the task disappears
   watchEffect(() => {
     if (task.value) {
       editedTask.value = {

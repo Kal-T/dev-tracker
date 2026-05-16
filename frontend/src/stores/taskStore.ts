@@ -27,10 +27,8 @@ export interface Task {
 }
 
 export const useTaskStore = defineStore('task', () => {
-  // State
   const tasks = ref<Task[]>([])
 
-  // Load from localStorage on initialization
   const savedTasks = localStorage.getItem('devtracker-tasks')
   if (savedTasks) {
     try {
@@ -41,7 +39,6 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  // Persistence Watcher
   watch(
     tasks,
     (newTasks) => {

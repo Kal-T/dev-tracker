@@ -16,11 +16,7 @@ describe('App', () => {
         plugins: [router, createPinia()]
       }
     })
-
-    // Wait for the router's initial navigation to settle
     await router.isReady()
-
-    // App.vue renders a dynamic layout component — confirm the root element exists
     expect(wrapper.element).toBeTruthy()
   })
 })

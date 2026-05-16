@@ -35,6 +35,33 @@ const router = createRouter({
       // component: LoginView,
       component: () => import('../views/LoginView.vue'),
       meta: { layout: 'auth' }
+    },
+
+    // { path: '/examples', redirect: '/examples/vmodel' }
+    // { path: '/examples', redirect: { name: 'vmodel-demo' } }
+
+    // {
+    //   path: '/examples',
+    //   component: ExamplesLayout,        // contain <RouterView />
+    //   children: [
+    //     {
+    //       path: 'vmodel',
+    //       name: 'vmodel-demo',
+    //       component: () => import('../views/VModelDemoView.vue')
+    //     },
+    //     {
+    //       path: 'test'
+    //       name: 'test-demo',
+    //       component: () => import('../views/Test.vue')
+    //     }
+    //   ]
+    // }
+
+    // ── Active Route (used by the app) ───────────────────────────────────────
+    {
+      path: '/vmodel',
+      name: 'vmodel-demo',
+      component: () => import('../views/VModelDemoView.vue')
     }
   ]
 })
