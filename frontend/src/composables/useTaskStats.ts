@@ -1,22 +1,27 @@
 import { computed } from 'vue'
-import { useTaskStore, TASK_STATUS, TASK_PRIORITY } from '@/stores/taskStore'
+import { useTasksQuery } from './useTasks'
 
 export function useTaskStats() {
-  const taskStore = useTaskStore()
+  const { data: response } = useTasksQuery(undefined, undefined)
 
   const stats = computed(() => {
-    const total = taskStore.taskCount
-    const done = taskStore.tasks.filter((t) => t.status === TASK_STATUS.DONE).length
+    const tasks = response.value?.data || []
+    const total = tasks.length
+    const done = tasks.filter((t) => t.status === 'done').length
     const completionRate = total > 0 ? Math.round((done / total) * 100) : 0
 
     const priorityCounts = {
-      [TASK_PRIORITY.LOW]: taskStore.tasks.filter((t) => t.priority === TASK_PRIORITY.LOW).length,
-      [TASK_PRIORITY.MEDIUM]: taskStore.tasks.filter((t) => t.priority === TASK_PRIORITY.MEDIUM)
-        .length,
-      [TASK_PRIORITY.HIGH]: taskStore.tasks.filter((t) => t.priority === TASK_PRIORITY.HIGH).length
+      low: tasks.filter((t) => t.priority === 'low').length,
+      medium: tasks.filter((t) => t.priority === 'medium').length,
+      high: tasks.filter((t) => t.priority === 'high').length
     }
 
-    return { total, done, completionRate, priorityCounts }
+    const typeCounts = {
+      user: tasks.filter((t) => t.type === 'user').length,
+      github: tasks.filter((t) => t.type === 'github').length
+    }
+
+    return { total, done, completionRate, priorityCounts, typeCounts }
   })
 
   const getBarWidth = (count: number): string => {

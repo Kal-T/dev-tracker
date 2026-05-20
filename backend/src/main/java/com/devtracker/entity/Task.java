@@ -44,6 +44,11 @@ public class Task {
     @Builder.Default
     private TaskPriority priority = TaskPriority.MEDIUM;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private TaskType type = TaskType.USER;
+
     @ElementCollection
     @CollectionTable(name = "task_tags", joinColumns = @JoinColumn(name = "task_id"))
     @Column(name = "tag")

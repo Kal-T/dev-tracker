@@ -16,7 +16,6 @@ export default {
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { TASK_STATUS, TASK_PRIORITY } from '@/stores/taskStore'
 import { useTaskDetail } from '@/composables/useTaskDetail'
 
 const route = useRoute()
@@ -24,10 +23,19 @@ const taskId = computed(() => route.params.id as string)
 
 const { task, isEditing, editedTask, toggleEdit, saveChanges, cancelEdit } = useTaskDetail(taskId)
 
-const priorityColors = {
-  [TASK_PRIORITY.LOW]: 'bg-green-100 text-green-700',
-  [TASK_PRIORITY.MEDIUM]: 'bg-yellow-100 text-yellow-700',
-  [TASK_PRIORITY.HIGH]: 'bg-red-100 text-red-700'
+const priorityColors: Record<string, string> = {
+  low: 'bg-green-100 text-green-700 border-green-200',
+  medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  high: 'bg-red-100 text-red-700 border-red-200'
+}
+
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return 'N/A'
+  try {
+    return new Date(dateStr).toLocaleDateString()
+  } catch (e) {
+    return dateStr
+  }
 }
 </script>
 
@@ -93,7 +101,7 @@ const priorityColors = {
             <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Status</h3>
             <div
               v-if="!isEditing"
-              class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-slate-100 text-slate-600"
+              class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-slate-100 text-slate-600 uppercase tracking-wider"
             >
               {{ task.status }}
             </div>
@@ -102,9 +110,9 @@ const priorityColors = {
               v-model="editedTask.status"
               class="w-full p-2 bg-white rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium text-sm"
             >
-              <option :value="TASK_STATUS.TODO">To Do</option>
-              <option :value="TASK_STATUS.IN_PROGRESS">In Progress</option>
-              <option :value="TASK_STATUS.DONE">Done</option>
+              <option value="todo">To Do</option>
+              <option value="in-progress">In Progress</option>
+              <option value="done">Done</option>
             </select>
           </div>
 
@@ -114,7 +122,7 @@ const priorityColors = {
             </h3>
             <div
               v-if="!isEditing"
-              class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider"
+              class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider border"
               :class="priorityColors[task.priority]"
             >
               {{ task.priority }}
@@ -124,9 +132,9 @@ const priorityColors = {
               v-model="editedTask.priority"
               class="w-full p-2 bg-white rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium text-sm"
             >
-              <option :value="TASK_PRIORITY.LOW">Low</option>
-              <option :value="TASK_PRIORITY.MEDIUM">Medium</option>
-              <option :value="TASK_PRIORITY.HIGH">High</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
             </select>
           </div>
 
@@ -135,7 +143,7 @@ const priorityColors = {
               Created At
             </h3>
             <div class="text-slate-500 text-sm font-medium">
-              {{ new Date(task.createdAt).toLocaleDateString() }}
+              {{ formatDate(task.createdAt) }}
             </div>
           </div>
         </div>

@@ -1,50 +1,74 @@
-import { ref, computed } from 'vue'
-import { useTaskStore, TASK_STATUS, type TaskStatus } from '@/stores/taskStore'
+import { ref, watch, computed } from 'vue'
+import { useTasksQuery, useUpdateTaskStatusMutation, useDeleteTaskMutation } from './useTasks'
+
+export const TASK_STATUS = {
+  TODO: 'todo',
+  IN_PROGRESS: 'in-progress',
+  DONE: 'done'
+} as const
+
+export type TaskStatus = (typeof TASK_STATUS)[keyof typeof TASK_STATUS]
 
 export function useKanbanBoard() {
-  const taskStore = useTaskStore()
   const searchQuery = ref('')
+  const debouncedSearchQuery = ref('')
+  const activeTypeFilter = ref<'all' | 'user' | 'github'>('all')
+
+  let timeoutId: any
+  watch(searchQuery, (newVal) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      debouncedSearchQuery.value = newVal
+    }, 300)
+  })
+
+  const { data: response, isLoading } = useTasksQuery(undefined, debouncedSearchQuery)
+
+  const updateStatusMutation = useUpdateTaskStatusMutation(undefined, debouncedSearchQuery)
+  const deleteTaskMutation = useDeleteTaskMutation()
+
+  const filteredTasks = computed(() => {
+    const tasks = response.value?.data || []
+    if (activeTypeFilter.value === 'all') return tasks
+    return tasks.filter((t) => t.type === activeTypeFilter.value)
+  })
 
   const todoTasks = computed({
-    get: () =>
-      taskStore.filteredTasks(searchQuery.value).filter((t) => t.status === TASK_STATUS.TODO),
+    get: () => filteredTasks.value.filter((t) => t.status === 'todo'),
     set: () => {}
   })
 
   const inProgressTasks = computed({
-    get: () =>
-      taskStore
-        .filteredTasks(searchQuery.value)
-        .filter((t) => t.status === TASK_STATUS.IN_PROGRESS),
+    get: () => filteredTasks.value.filter((t) => t.status === 'in-progress'),
     set: () => {}
   })
 
   const doneTasks = computed({
-    get: () =>
-      taskStore.filteredTasks(searchQuery.value).filter((t) => t.status === TASK_STATUS.DONE),
+    get: () => filteredTasks.value.filter((t) => t.status === 'done'),
     set: () => {}
   })
 
-  const onDragChange = (event: any, newStatus: TaskStatus) => {
+  const onDragChange = (event: any, newStatus: string) => {
     if (event.added) {
       const task = event.added.element
-      taskStore.moveTask(task.id, newStatus)
+      updateStatusMutation.mutate({ id: task.id, status: newStatus })
     }
   }
 
-  const handleMove = (id: string, newStatus: TaskStatus) => {
-    taskStore.moveTask(id, newStatus)
+  const handleMove = (id: string, newStatus: string) => {
+    updateStatusMutation.mutate({ id, status: newStatus })
   }
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this task?')) {
-      taskStore.deleteTask(id)
+      deleteTaskMutation.mutate(id)
     }
   }
 
   return {
-    taskStore,
+    isLoading,
     searchQuery,
+    activeTypeFilter,
     todoTasks,
     inProgressTasks,
     doneTasks,

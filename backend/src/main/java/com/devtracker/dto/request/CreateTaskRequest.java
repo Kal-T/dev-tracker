@@ -16,5 +16,7 @@ public record CreateTaskRequest(
     @NotNull(message = "Priority is required")
     String priority,
 
-    List<String> tags
+    List<String> tags,
+    
+    String type
 ) {}

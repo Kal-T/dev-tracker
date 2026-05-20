@@ -3,9 +3,9 @@ package com.devtracker.config;
 import com.devtracker.entity.*;
 import com.devtracker.repository.TaskRepository;
 import com.devtracker.repository.UserRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -18,14 +18,14 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DataInitializer {
+public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    @PostConstruct
-    public void init() {
+    @Override
+    public void run(String... args) {
         log.info("Seeding database with demo data...");
 
         // ── Users ──────────────────────────────────────────────────────────────

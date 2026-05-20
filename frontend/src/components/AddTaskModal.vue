@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { useForm, useField } from 'vee-validate'
 import * as yup from 'yup'
-import { useTaskStore, TASK_STATUS, TASK_PRIORITY } from '@/stores/taskStore'
+import { useCreateTaskMutation } from '@/composables/useTasks'
 import BaseModal from './BaseModal.vue'
 
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const taskStore = useTaskStore()
+const createTaskMutation = useCreateTaskMutation()
+
+const TASK_PRIORITY = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high'
+} as const
 
 // Validation Schema
 const schema = yup.object({
@@ -34,7 +40,6 @@ const { value: priority } = useField<string>('priority')
 const { value: tagsInput } = useField<string>('tags')
 
 const onSubmit = handleSubmit((values) => {
-  // Process tags from comma-separated string to array
   const tagsArray = values.tags
     ? String(values.tags)
         .split(',')
@@ -42,15 +47,21 @@ const onSubmit = handleSubmit((values) => {
         .filter((tag) => tag !== '')
     : []
 
-  taskStore.addTask({
-    title: values.title as string,
-    description: (values.description as string) || '',
-    priority: values.priority as any,
-    status: TASK_STATUS.TODO,
-    tags: tagsArray
-  })
-
-  emit('close')
+  createTaskMutation.mutate(
+    {
+      title: values.title as string,
+      description: (values.description as string) || '',
+      priority: (values.priority as string).toUpperCase(),
+      status: 'TODO',
+      type: 'user',
+      tags: tagsArray
+    },
+    {
+      onSuccess: () => {
+        emit('close')
+      }
+    }
+  )
 })
 </script>
 

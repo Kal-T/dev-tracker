@@ -8,6 +8,7 @@ import com.devtracker.dto.response.TaskResponse;
 import com.devtracker.entity.Task;
 import com.devtracker.entity.TaskPriority;
 import com.devtracker.entity.TaskStatus;
+import com.devtracker.entity.TaskType;
 import com.devtracker.entity.User;
 import com.devtracker.exception.ResourceNotFoundException;
 import com.devtracker.repository.TaskRepository;
@@ -25,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.devtracker.dto.response.CursorResponse;
 
 @Slf4j
 @Service
@@ -58,6 +61,45 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
+    public CursorResponse<TaskResponse> getTasksCursorPaginated(UUID cursor, int size) {
+        log.debug("Fetching cursor-based paginated tasks - cursor: {}, size: {}", cursor, size);
+        
+        List<Task> tasks;
+        if (cursor != null) {
+            Task cursorTask = taskRepository.findById(cursor)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cursor task not found with ID: " + cursor));
+            Pageable pageable = PageRequest.of(0, size);
+            tasks = taskRepository.findTasksBefore(cursorTask.getCreatedAt(), pageable);
+        } else {
+            Pageable pageable = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+            tasks = taskRepository.findAll(pageable).getContent();
+        }
+
+        List<TaskResponse> mappedData = tasks.stream()
+                .map(taskMapper::toResponse)
+                .toList();
+
+        String nextCursor = null;
+        if (!mappedData.isEmpty() && mappedData.size() == size) {
+            nextCursor = mappedData.get(mappedData.size() - 1).id().toString();
+        }
+
+        return new CursorResponse<>(mappedData, nextCursor);
+    }
+
+    @Transactional
+    public int bulkUpdateStatus(List<UUID> ids, String statusStr) {
+        log.info("Performing bulk status update on {} tasks to '{}'", ids.size(), statusStr);
+        TaskStatus status;
+        try {
+            status = TaskStatus.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new IllegalArgumentException("Invalid task status for bulk update: " + statusStr);
+        }
+        return taskRepository.bulkUpdateStatus(ids, status);
+    }
+
+    @Transactional(readOnly = true)
     public TaskResponse getTaskById(UUID id) {
         log.debug("Fetching task by id: {}", id);
         Task task = taskRepository.findById(id)
@@ -76,11 +118,19 @@ public class TaskService {
             priority = TaskPriority.MEDIUM; // Default priority fallback
         }
 
+        TaskType type;
+        try {
+            type = TaskType.valueOf(request.type().toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            type = TaskType.USER; // Default type fallback
+        }
+
         Task task = Task.builder()
                 .title(request.title())
                 .description(request.description())
                 .status(TaskStatus.TODO) // New tasks always default to TODO
                 .priority(priority)
+                .type(type)
                 .tags(request.tags() != null ? new ArrayList<>(request.tags()) : new ArrayList<>())
                 .owner(owner)
                 .build();

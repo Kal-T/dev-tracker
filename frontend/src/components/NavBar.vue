@@ -67,9 +67,9 @@ const handleLogout = () => {
               <div
                 class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-indigo-200"
               >
-                {{ authStore.user?.name.charAt(0) }}
+                {{ authStore.user?.displayName?.charAt(0) || 'U' }}
               </div>
-              <span class="text-sm font-semibold text-slate-700">{{ authStore.user?.name }}</span>
+              <span class="text-sm font-semibold text-slate-700">{{ authStore.user?.displayName }}</span>
             </div>
             <button
               class="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"

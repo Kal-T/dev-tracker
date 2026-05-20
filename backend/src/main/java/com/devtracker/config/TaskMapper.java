@@ -60,7 +60,8 @@ public class TaskMapper {
                 task.getTags(),
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
-                ownerEmail
+                ownerEmail,
+                task.getType() != null ? task.getType().name() : null
         );
     }
 }

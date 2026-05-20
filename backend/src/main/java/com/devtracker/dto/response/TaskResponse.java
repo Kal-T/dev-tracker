@@ -13,5 +13,6 @@ public record TaskResponse(
     List<String> tags,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    String ownerEmail
+    String ownerEmail,
+    String type
 ) {}

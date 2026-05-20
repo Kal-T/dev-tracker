@@ -1,20 +1,33 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 import MainLayout from './layouts/MainLayout.vue'
 import AuthLayout from './layouts/AuthLayout.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const layouts = {
   default: MainLayout,
   auth: AuthLayout
 }
 
-// Compute the active layout based on route meta, fallback to default
 const layout = computed(() => {
   const layoutName = route.meta.layout as keyof typeof layouts
   return layouts[layoutName] || layouts.default
+})
+
+onMounted(async () => {
+  const hasUserSession = localStorage.getItem('devtracker-user')
+  if (hasUserSession && !authStore.isAuthenticated) {
+    try {
+      console.log('[DevTracker] Restoring active authentication session...')
+      await authStore.refreshSession()
+    } catch (e) {
+      console.warn('[DevTracker] Active session check failed.')
+    }
+  }
 })
 </script>
 

@@ -18,12 +18,6 @@ const router = createRouter({
       component: BoardView
     },
     {
-      path: '/task/:id',
-      name: 'task-detail',
-      // component: TaskDetailView
-      component: () => import('../views/TaskDetailView.vue')
-    },
-    {
       path: '/stats',
       name: 'stats',
       // component: StatsView

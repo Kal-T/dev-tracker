@@ -1,5 +1,5 @@
 import type { Directive, DirectiveBinding } from 'vue'
-import { TASK_PRIORITY } from '@/stores/taskStore'
+import { TASK_PRIORITY } from '@/composables/useTasks'
 
 const applyPriorityStyle = (el: HTMLElement, priority: string) => {
   const colors: Record<string, string> = {

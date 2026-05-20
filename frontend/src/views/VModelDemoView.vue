@@ -7,7 +7,6 @@ const taskTitle = ref('')
 
 <template>
   <div class="max-w-2xl mx-auto px-4 py-10 space-y-8">
-
     <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-5">
       <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
         <span
@@ -17,12 +16,7 @@ const taskTitle = ref('')
         Demo
       </h2>
 
-      <AppInput
-        v-model="taskTitle"
-        label="Task Title"
-        placeholder="e.g. Fix login page bug"
-        @blur="validateTitle"
-      />
+      <AppInput v-model="taskTitle" label="Task Title" placeholder="e.g. Fix login page bug" />
 
       <div class="flex items-center gap-2 text-sm pt-1">
         <span class="text-slate-400">Live value:</span>

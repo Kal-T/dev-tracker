@@ -1,22 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, provide } from 'vue'
 import draggable from 'vuedraggable'
-import { TASK_STATUS } from '@/stores/taskStore'
-import { useKanbanBoard } from '@/composables/useKanbanBoard'
+import { useKanbanBoard, TASK_STATUS } from '@/composables/useKanbanBoard'
 import TaskCard from '@/components/TaskCard.vue'
 import AddTaskModal from '@/components/AddTaskModal.vue'
 import GithubImport from '@/components/GithubImport.vue'
 
-const { taskStore, searchQuery, todoTasks, inProgressTasks, doneTasks, onDragChange, handleMove, handleDelete } = useKanbanBoard()
+const { isLoading, searchQuery, activeTypeFilter, todoTasks, inProgressTasks, doneTasks, onDragChange, handleMove, handleDelete } = useKanbanBoard()
+
+provide('delete-task', handleDelete)
+
+import TaskDetailModal from '@/components/TaskDetailModal.vue'
 
 const isModalOpen = ref(false)
-const isLoading = ref(true)
-
-onMounted(() => {
-  setTimeout(() => {
-    isLoading.value = false
-  }, 1000)
-})
+const selectedTaskId = ref<string | null>(null)
 
 const toggleModal = () => {
   isModalOpen.value = !isModalOpen.value
@@ -29,6 +26,23 @@ const toggleModal = () => {
       <h1 class="text-3xl font-black text-slate-900 tracking-tight">Project Board</h1>
 
       <div class="flex items-center gap-3">
+        <!-- Source Filter -->
+        <div class="relative min-w-[140px]">
+          <select
+            v-model="activeTypeFilter"
+            class="w-full pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none cursor-pointer text-sm"
+          >
+            <option value="all">All Sources</option>
+            <option value="user">User Tasks</option>
+            <option value="github">GitHub Issues</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+            </svg>
+          </div>
+        </div>
+
         <div class="relative">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +95,7 @@ const toggleModal = () => {
 
     <!-- Empty State Message (v-if) -->
     <div
-      v-if="!isLoading && taskStore.taskCount === 0"
+      v-if="!isLoading && (todoTasks.length + inProgressTasks.length + doneTasks.length) === 0"
       class="bg-white border-2 border-dashed border-slate-200 rounded-3xl py-20 flex flex-col items-center justify-center text-center mb-8"
     >
       <div class="bg-slate-50 p-4 rounded-full mb-4">
@@ -124,10 +138,10 @@ const toggleModal = () => {
         >
           <template #item="{ element }">
             <TaskCard 
-              v-memo="[element.status, element.priority, element.title]"
+              v-memo="[element.status, element.priority, element.title, element.type]"
               :task="element" 
               @move="handleMove" 
-              @delete="handleDelete" 
+              @select="(id) => selectedTaskId = id"
             />
           </template>
         </draggable>
@@ -150,10 +164,10 @@ const toggleModal = () => {
         >
           <template #item="{ element }">
             <TaskCard 
-              v-memo="[element.status, element.priority, element.title]"
+              v-memo="[element.status, element.priority, element.title, element.type]"
               :task="element" 
               @move="handleMove" 
-              @delete="handleDelete" 
+              @select="(id) => selectedTaskId = id"
             />
           </template>
         </draggable>
@@ -175,10 +189,10 @@ const toggleModal = () => {
         >
           <template #item="{ element }">
             <TaskCard 
-              v-memo="[element.status, element.priority, element.title]"
+              v-memo="[element.status, element.priority, element.title, element.type]"
               :task="element" 
               @move="handleMove" 
-              @delete="handleDelete" 
+              @select="(id) => selectedTaskId = id"
             />
           </template>
         </draggable>
@@ -187,6 +201,7 @@ const toggleModal = () => {
 
     <!-- Modals -->
     <AddTaskModal v-if="isModalOpen" @close="toggleModal" />
+    <TaskDetailModal v-if="selectedTaskId" :taskId="selectedTaskId" @close="selectedTaskId = null" />
   </div>
 </template>
 

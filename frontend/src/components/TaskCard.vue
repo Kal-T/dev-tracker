@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
 import { type DirectiveBinding } from 'vue'
-import { TASK_STATUS, TASK_PRIORITY, type Task, type TaskStatus } from '@/stores/taskStore'
+import { TASK_STATUS, TASK_PRIORITY, type Task, type TaskStatus } from '@/composables/useTasks'
+import DeleteButton from './DeleteButton.vue'
 
 const props = defineProps<{
   task: Task
@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'move', id: string, status: TaskStatus): void
-  (e: 'delete', id: string): void
+  (e: 'select', id: string): void
 }>()
 
 const priorityColors = {
@@ -32,40 +32,44 @@ const statusOptions: { label: string; value: TaskStatus }[] = [
     class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow group cursor-grab active:cursor-grabbing select-none"
   >
     <div class="flex justify-between items-start mb-3">
-      <span
-        class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border"
-        :class="priorityColors[task.priority]"
-      >
-        {{ task.priority }}
-      </span>
-      <button
-        class="text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-        @click="emit('delete', task.id)"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      <div class="flex items-center gap-1.5">
+        <span
+          class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border"
+          :class="priorityColors[task.priority]"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-          />
-        </svg>
-      </button>
+          {{ task.priority }}
+        </span>
+
+        <!-- Source Type Indicator Badge -->
+        <span
+          v-if="task.type === 'github'"
+          class="text-[10px] font-extrabold px-2 py-0.5 rounded-full border bg-slate-800 text-white border-slate-900 flex items-center gap-1 shadow-sm"
+        >
+          <svg class="h-3 w-3 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub
+        </span>
+        <span
+          v-else
+          class="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-100 flex items-center gap-1"
+        >
+          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          User
+        </span>
+      </div>
+      <DeleteButton :taskId="task.id" />
     </div>
 
-    <RouterLink :to="`/task/${task.id}`" class="block group/title">
+    <div class="block cursor-pointer group/title" @click="emit('select', task.id)">
       <h3
         class="font-semibold text-slate-800 mb-1 leading-tight group-hover/title:text-blue-600 transition-colors"
       >
         {{ task.title }}
       </h3>
-    </RouterLink>
+    </div>
     <p class="text-sm text-slate-500 line-clamp-2 mb-4">{{ task.description }}</p>
 
     <div class="flex flex-wrap gap-1 mb-4">

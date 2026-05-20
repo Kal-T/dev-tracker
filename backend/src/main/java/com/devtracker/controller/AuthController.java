@@ -1,17 +1,20 @@
 package com.devtracker.controller;
 
 import com.devtracker.dto.request.LoginRequest;
-import com.devtracker.dto.request.RefreshTokenRequest;
 import com.devtracker.dto.request.RegisterRequest;
 import com.devtracker.dto.response.TokenResponse;
 import com.devtracker.entity.User;
 import com.devtracker.exception.ResourceNotFoundException;
 import com.devtracker.repository.UserRepository;
 import com.devtracker.security.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +33,9 @@ public class AuthController {
     private final JwtService jwtService;
     private final BCryptPasswordEncoder passwordEncoder;
 
+    @Value("${app.security.cookie-secure:false}")
+    private boolean cookieSecure;
+
     private String hashToken(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -47,7 +53,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<TokenResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<TokenResponse> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletResponse response
+    ) {
         log.info("Processing user registration for: {}", request.email());
 
         if (userRepository.findByEmail(request.email()).isPresent()) {
@@ -69,11 +78,24 @@ public class AuthController {
         savedUser.setRefreshTokenHash(hashToken(refreshToken));
         userRepository.save(savedUser);
 
-        return new ResponseEntity<>(new TokenResponse(accessToken, refreshToken), HttpStatus.CREATED);
+        // Issue Refresh Token in secure HTTP-Only Cookie
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/api/auth")
+                .maxAge(7 * 24 * 60 * 60) // 7 days
+                .sameSite("Strict")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return new ResponseEntity<>(new TokenResponse(accessToken), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<TokenResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletResponse response
+    ) {
         log.info("Processing login request for: {}", request.email());
 
         User user = userRepository.findByEmail(request.email())
@@ -90,13 +112,29 @@ public class AuthController {
         user.setRefreshTokenHash(hashToken(refreshToken));
         userRepository.save(user);
 
-        return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
+        // Issue Refresh Token in secure HTTP-Only Cookie
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/api/auth")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Strict")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(new TokenResponse(accessToken));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<TokenResponse> refresh(
+            @CookieValue(name = "refreshToken", required = false) String incomingToken,
+            HttpServletResponse response
+    ) {
         log.info("Processing token refresh request");
-        String incomingToken = request.refreshToken();
+
+        if (incomingToken == null) {
+            throw new IllegalArgumentException("Missing refresh token cookie.");
+        }
 
         String email = jwtService.extractEmail(incomingToken);
         if (email == null || jwtService.isTokenExpired(incomingToken)) {
@@ -112,6 +150,17 @@ public class AuthController {
             log.warn("Replay attack detected or token invalidated! Invalidating all active tokens for user: {}", email);
             user.setRefreshTokenHash(null);
             userRepository.save(user);
+
+            // Clear the obsolete cookie on replay attack detection
+            ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .secure(cookieSecure)
+                    .path("/api/auth")
+                    .maxAge(0)
+                    .sameSite("Strict")
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, clearCookie.toString());
+
             throw new IllegalArgumentException("Replay attack or obsolete token detected. Please login again.");
         }
 
@@ -122,20 +171,24 @@ public class AuthController {
         user.setRefreshTokenHash(hashToken(newRefreshToken));
         userRepository.save(user);
 
-        return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken));
+        // Issue new rotated Refresh Token in secure Cookie
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/api/auth")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Strict")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(new TokenResponse(newAccessToken));
     }
 
-    /**
-     * Stateless JWT Logout Tradeoff:
-     *
-     * In a purely stateless JWT system, the server cannot invalidate a token because there is
-     * no central state checked on every request. Therefore:
-     *   1. The client simply deletes the tokens from local storage (Pinia / localStorage).
-     *   2. To mitigate unauthorized usage of the refresh token, we invalidate the stored refresh token hash 
-     *      on the server side so that it can never be used to query new access tokens again.
-     */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<Void> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            HttpServletResponse response
+    ) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String jwt = authHeader.substring(7);
             try {
@@ -152,6 +205,17 @@ public class AuthController {
                 log.debug("Logout token extraction parsed but failed or expired: {}", e.getMessage());
             }
         }
+
+        // Invalidate and delete refresh token cookie from the browser
+        ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/api/auth")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, clearCookie.toString());
+
         return ResponseEntity.noContent().build();
     }
 }

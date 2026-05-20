@@ -1,41 +1,33 @@
-import { ref, computed, watchEffect } from 'vue'
-import { useRouter } from 'vue-router'
-import {
-  useTaskStore,
-  TASK_STATUS,
-  TASK_PRIORITY,
-  type TaskStatus,
-  type TaskPriority
-} from '@/stores/taskStore'
-import type { Ref } from 'vue'
+import { ref, watch, type Ref } from 'vue'
+import { useTaskDetailQuery, useUpdateTaskMutation } from './useTasks'
 
 export function useTaskDetail(taskId: Ref<string>) {
-  const taskStore = useTaskStore()
-  const router = useRouter()
-
   const isEditing = ref(false)
 
-  const task = computed(() => taskStore.tasks.find((t) => t.id === taskId.value))
+  const { data: task } = useTaskDetailQuery(taskId)
+  const updateMutation = useUpdateTaskMutation()
 
   const editedTask = ref({
     title: '',
     description: '',
-    status: TASK_STATUS.TODO as TaskStatus,
-    priority: TASK_PRIORITY.MEDIUM as TaskPriority
+    status: 'todo',
+    priority: 'medium'
   })
 
-  watchEffect(() => {
-    if (task.value) {
-      editedTask.value = {
-        title: task.value.title,
-        description: task.value.description,
-        status: task.value.status,
-        priority: task.value.priority
+  watch(
+    task,
+    (newTask) => {
+      if (newTask) {
+        editedTask.value = {
+          title: newTask.title,
+          description: newTask.description,
+          status: newTask.status,
+          priority: newTask.priority
+        }
       }
-    } else {
-      router.replace('/board')
-    }
-  })
+    },
+    { immediate: true }
+  )
 
   const toggleEdit = () => {
     isEditing.value = !isEditing.value
@@ -43,8 +35,17 @@ export function useTaskDetail(taskId: Ref<string>) {
 
   const saveChanges = () => {
     if (task.value) {
-      taskStore.updateTask(task.value.id, editedTask.value)
-      isEditing.value = false
+      updateMutation.mutate(
+        {
+          id: task.value.id,
+          task: editedTask.value
+        },
+        {
+          onSuccess: () => {
+            isEditing.value = false
+          }
+        }
+      )
     }
   }
 

@@ -19,7 +19,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.UUID;
 
+import com.devtracker.dto.request.BulkStatusUpdateRequest;
+
 @Slf4j
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/tasks")
 @Validated
@@ -30,14 +33,23 @@ public class TaskController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<PaginatedResponse<TaskResponse>> getTasks(
+    public ResponseEntity<?> getTasks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String search
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) UUID cursor
     ) {
-        PaginatedResponse<TaskResponse> response = taskService.getTasksPaginated(page, size, status, search);
-        return ResponseEntity.ok(response);
+        if (cursor != null) {
+            return ResponseEntity.ok(taskService.getTasksCursorPaginated(cursor, size));
+        }
+        return ResponseEntity.ok(taskService.getTasksPaginated(page, size, status, search));
+    }
+
+    @PostMapping("/bulk-status")
+    public ResponseEntity<Integer> bulkUpdateStatus(@Valid @RequestBody BulkStatusUpdateRequest request) {
+        int updatedCount = taskService.bulkUpdateStatus(request.ids(), request.status());
+        return ResponseEntity.ok(updatedCount);
     }
 
     /**
