@@ -5,7 +5,6 @@ const props = defineProps<{
   taskId: string
 }>()
 
-// Inject the task deletion handler from the BoardView provider
 const deleteTask = inject<(id: string) => void>('delete-task')
 
 const onClick = () => {

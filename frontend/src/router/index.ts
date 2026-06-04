@@ -56,6 +56,53 @@ const router = createRouter({
       path: '/vmodel',
       name: 'vmodel-demo',
       component: () => import('../views/VModelDemoView.vue')
+    },
+    {
+      path: '/explorer',
+      component: () => import('../views/explorer/ExplorerLayout.vue'),
+      children: [
+        {
+          path: '',
+          name: 'explorer-home',
+          component: () => import('../views/explorer/ExplorerHomeView.vue')
+        },
+        {
+          path: 'tasks',
+          name: 'explorer-tasks',
+          component: () => import('../views/explorer/ExplorerTasksView.vue')
+        },
+        {
+          path: 'tasks/:id',
+          name: 'explorer-task-detail',
+          component: () => import('../views/explorer/ExplorerTaskDetailParent.vue'),
+          props: true,
+          children: [
+            {
+              path: '',
+              redirect: to => {
+                return `${to.path}/info`
+              }
+            },
+            {
+              path: 'info',
+              name: 'explorer-task-info',
+              component: () => import('../views/explorer/ExplorerTaskInfoChild.vue'),
+              props: true
+            },
+            {
+              path: 'json',
+              name: 'explorer-task-json',
+              component: () => import('../views/explorer/ExplorerTaskJsonChild.vue'),
+              props: true
+            }
+          ]
+        },
+        {
+          path: 'tags/:tag',
+          name: 'explorer-tag-filter',
+          component: () => import('../views/explorer/ExplorerTagFilteredView.vue')
+        }
+      ]
     }
   ]
 })

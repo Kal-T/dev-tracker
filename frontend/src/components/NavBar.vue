@@ -45,6 +45,13 @@ const handleLogout = () => {
             >
               v-model
             </RouterLink>
+            <RouterLink
+              to="/explorer"
+              class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-indigo-50 transition-colors"
+              active-class="text-indigo-600 bg-indigo-50"
+            >
+              Routing Explorer
+            </RouterLink>
           </div>
         </div>
 
